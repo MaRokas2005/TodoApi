@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TodoApi;
 using TodoApi.Dtos;
 
 namespace TodoApi.Controllers
@@ -43,9 +37,11 @@ namespace TodoApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTodo(int id, UpdateTodoDto todo)
         {
+            _logger.LogInformation("Updating todo with ID: {id}", id);
             var existingTodo = await _context.Todos.FindAsync(id);
             if (existingTodo == null)
             {
+                _logger.LogWarning("Todo with ID: {id} not found for update", id);
                 return NotFound();
             }
 
@@ -58,20 +54,23 @@ namespace TodoApi.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("Todo with ID: {id} updated successfully", id);
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!TodoExists(id))
                 {
+                    _logger.LogWarning("Todo with ID: {id} not found during update", id);
                     return NotFound();
                 }
                 else
                 {
+                    _logger.LogError("Concurrency error while updating todo with ID: {id}", id);
                     throw;
                 }
             }
 
-            return Ok();
+            return NoContent();
         }
 
         // POST: api/todo
@@ -90,6 +89,7 @@ namespace TodoApi.Controllers
             };
             _context.Todos.Add(newTodo);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Created new todo: {@todo}", newTodo);
 
             return CreatedAtAction("GetTodo", new { id = newTodo.Id }, newTodo);
         }
@@ -98,14 +98,17 @@ namespace TodoApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTodo(int id)
         {
+            _logger.LogInformation("Deleting todo with ID: {id}", id);
             var todo = await _context.Todos.FindAsync(id);
             if (todo == null)
             {
+                _logger.LogWarning("Todo with ID: {id} not found for deletion", id);
                 return NotFound();
             }
 
             _context.Todos.Remove(todo);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Todo with ID: {id} deleted successfully", id);
 
             return NoContent();
         }
