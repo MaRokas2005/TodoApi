@@ -1,4 +1,4 @@
-﻿namespace TodoApi;
+﻿namespace src;
 
 public class Todo
 {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace TodoApi;
+namespace src;
 
 public class TodoDbContext(DbContextOptions<TodoDbContext> options) : DbContext(options)
 {

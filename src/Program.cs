@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using TodoApi;
 using Serilog;
+using src;
 
 var builder = WebApplication.CreateBuilder(args);
 
