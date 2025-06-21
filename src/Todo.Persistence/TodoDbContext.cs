@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Todo.Persistence.Entities;
 
-namespace src;
+namespace Todo.Persistence;
 
 public class TodoDbContext(DbContextOptions<TodoDbContext> options) : DbContext(options)
 {
-    public DbSet<Todo> Todos { get; set; }
+    public DbSet<TodoItem> Todos { get; set; }
 }
