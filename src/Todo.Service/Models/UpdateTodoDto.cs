@@ -1,6 +1,6 @@
-﻿namespace Todo.Api.Response;
+﻿namespace Todo.Service.Models;
 
-public record TodoItemResponse(
+public record UpdateTodoDto(
     int Id,
     string Title,
     string Description,

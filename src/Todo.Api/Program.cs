@@ -1,4 +1,8 @@
 using Serilog;
+using FluentValidation;
+using Todo.Api.Infrastructure;
+using Todo.Service.Extensions;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,19 +10,22 @@ builder.Host.UseSerilog((context, loggerConfiguration) =>
 {
     loggerConfiguration.ReadFrom.Configuration(context.Configuration);
 });
-
-// Add services to the container.
-
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-//builder.Services.AddDbContext<TodoDbContext>(opt => opt.UseInMemoryDatabase("Todos"));
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+builder.Services.AddTodoServices();
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly, includeInternalTypes: true);
 
 var app = builder.Build();
 Log.Information($"Application has been built for {builder.Environment.EnvironmentName} environment.");
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -26,6 +33,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseExceptionHandler();
 
 app.UseAuthorization();
 

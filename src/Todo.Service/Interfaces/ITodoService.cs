@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Todo.Service.Models;
 
 namespace Todo.Service.Interfaces;
 
-internal interface ITodoService
+public interface ITodoService
 {
-
+    Task<IEnumerable<TodoDto>> GetAllTodosAsync();
+    Task<TodoDto?> GetTodoByIdAsync(int id);
+    Task<TodoDto> CreateTodoAsync(CreateTodoDto dto);
+    Task<TodoDto?> UpdateTodoAsync(UpdateTodoDto dto);
+    Task<bool> DeleteTodoAsync(int id);
 }
