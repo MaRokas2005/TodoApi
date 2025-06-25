@@ -1,18 +1,15 @@
-using Serilog;
 using FluentValidation;
+using Serilog;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using Todo.Api.Infrastructure;
+using Todo.Api.Validators;
 using Todo.Service.Extensions;
-using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, loggerConfiguration) =>
 {
     loggerConfiguration.ReadFrom.Configuration(context.Configuration);
-});
-builder.Services.Configure<ApiBehaviorOptions>(options =>
-{
-    options.SuppressModelStateInvalidFilter = true;
 });
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -21,7 +18,11 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddTodoServices();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
-builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly, includeInternalTypes: true);
+builder.Services.AddValidatorsFromAssemblyContaining<CreateTodoItemRequestValidator>();
+builder.Services.AddFluentValidationAutoValidation(cfg =>
+{
+    cfg.DisableBuiltInModelValidation = true;
+});
 
 var app = builder.Build();
 Log.Information($"Application has been built for {builder.Environment.EnvironmentName} environment.");

@@ -2,7 +2,7 @@
 
 public record CreateTodoItemRequest(
     string Title, 
-    string Description, 
+    string? Description, 
     bool? IsCompleted, 
-    DateTime? DueDate
+    DateTime DueDate
 );

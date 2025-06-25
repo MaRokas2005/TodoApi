@@ -3,7 +3,7 @@
 public record UpdateTodoDto(
     int Id,
     string Title,
-    string Description,
+    string? Description,
     bool IsCompleted,
     DateTime DueDate
 );

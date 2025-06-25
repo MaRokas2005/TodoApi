@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Todo.Api.Request;
 using Todo.Api.Response;
@@ -21,7 +20,8 @@ public class TodoController(ILogger<TodoController> _logger, IMapper _mapper, IT
     public async Task<ActionResult<IEnumerable<TodoItemResponse>>> GetTodos()
     {
         _logger.LogInformation("Fetching all todo items.");
-        return Ok(await _todoService.GetAllTodosAsync());
+        var todos = await _todoService.GetAllTodosAsync();
+        return Ok(_mapper.Map<IEnumerable<TodoItemResponse>>(todos));
     }
 
     // GET: api/todo/{id}
@@ -38,7 +38,7 @@ public class TodoController(ILogger<TodoController> _logger, IMapper _mapper, IT
             _logger.LogWarning("Todo item with ID: {id} not found.", id);
             return NotFound();
         }
-        return Ok(todoItem);
+        return Ok(_mapper.Map<TodoItemResponse>(todoItem));
     }
 
     // POST: api/todo
@@ -46,30 +46,12 @@ public class TodoController(ILogger<TodoController> _logger, IMapper _mapper, IT
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<TodoItemResponse>> CreateTodo([FromBody] CreateTodoItemRequest todoItem, IValidator<CreateTodoItemRequest> _validator)
+    public async Task<ActionResult<TodoItemResponse>> CreateTodo([FromBody] CreateTodoItemRequest todoItem)
     {
-        if (todoItem == null)
-        {
-            _logger.LogWarning("Received null todo item for creation.");
-            return BadRequest("Todo item cannot be null.");
-        }
-        var validationResult = _validator.Validate(todoItem);
-        if (!validationResult.IsValid)
-        {
-            _logger.LogWarning("Validation failed for todo item creation: {errors}", validationResult.Errors);
-            var problemDetails = new ValidationProblemDetails(validationResult.ToDictionary())
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Validation Error",
-                Detail = "One or more validation errors occurred.",
-                Instance = HttpContext.Request.Path
-            };
-            return ValidationProblem(problemDetails);
-        }
         _logger.LogInformation("Creating a new todo item.");
         var createTodoDto = _mapper.Map<CreateTodoDto>(todoItem);
         var createdTodo = await _todoService.CreateTodoAsync(createTodoDto);
-        return CreatedAtAction(nameof(GetTodoById), new { id = createdTodo.Id }, createdTodo);
+        return CreatedAtAction(nameof(GetTodoById), new { id = createdTodo.Id }, _mapper.Map<TodoItemResponse>(createdTodo));
     }
 
     // PUT: api/todo/{id}
@@ -78,30 +60,13 @@ public class TodoController(ILogger<TodoController> _logger, IMapper _mapper, IT
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<TodoItemResponse>> UpdateTodo(int id, [FromBody] UpdateTodoItemRequest todoItem, IValidator<UpdateTodoItemRequest> _validator)
+    public async Task<ActionResult<TodoItemResponse>> UpdateTodo(int id, [FromBody] UpdateTodoItemRequest todoItem)
     {
-        if (todoItem == null)
-        {
-            _logger.LogWarning("Received null todo item for update with Id: {id}", id);
-            return BadRequest("Todo item cannot be null.");
-        }
-        var validationResult = _validator.Validate(todoItem);
-        if (!validationResult.IsValid)
-        {
-            _logger.LogWarning("Validation failed for todo item update: {errors}", validationResult.Errors);
-            var problemDetails = new ValidationProblemDetails(validationResult.ToDictionary())
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Validation Error",
-                Detail = "One or more validation errors occurred.",
-                Instance = HttpContext.Request.Path
-            };
-            return ValidationProblem(problemDetails);
-        }
         if (todoItem.Id != id)
         {
-            _logger.LogWarning("Received invalid todo item for update with ID: {id}", id);
-            return BadRequest("Todo item is invalid.");
+            _logger.LogWarning("Mismatched ID in route and body: RouteId = {id}, BodyId = {bodyId}", id, todoItem.Id);
+            ModelState.AddModelError(nameof(todoItem.Id), "Route ID does not match body ID.");
+            return ValidationProblem(ModelState);
         }
         _logger.LogInformation("Updating todo item with Id: {id}", id);
         var updateTodoDto = _mapper.Map<UpdateTodoDto>(todoItem);
@@ -111,7 +76,7 @@ public class TodoController(ILogger<TodoController> _logger, IMapper _mapper, IT
             _logger.LogWarning("Todo item with Id: {id} not found for update.", id);
             return NotFound();
         }
-        return Ok(updatedTodo);
+        return Ok(_mapper.Map<TodoItemResponse>(updatedTodo));
     }
 
     // DELETE: api/todo/{id}
@@ -119,7 +84,7 @@ public class TodoController(ILogger<TodoController> _logger, IMapper _mapper, IT
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteTodo(int id)
+    public async Task<ActionResult> DeleteTodo(int id)
     {
         _logger.LogInformation("Deleting todo item with ID: {id}", id);
         var success = await _todoService.DeleteTodoAsync(id);

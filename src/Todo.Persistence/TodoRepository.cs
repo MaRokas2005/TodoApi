@@ -36,14 +36,13 @@ public class TodoRepository(TodoDbContext _context) : ITodoRepository
         {
             return null;
         }
-        var now = DateTime.UtcNow;
         var entity = existingItem with
         {
             Title = item.Title,
             Description = item.Description,
             IsCompleted = item.IsCompleted,
             DueDate = item.DueDate,
-            UpdatedAt = now
+            UpdatedAt = DateTime.UtcNow
         };
         _context.Entry(existingItem).CurrentValues.SetValues(entity);
         await _context.SaveChangesAsync();

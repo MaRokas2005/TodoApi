@@ -1,4 +1,4 @@
-namespace tests
+namespace Todo.UnitTests
 {
     public class Tests
     {
