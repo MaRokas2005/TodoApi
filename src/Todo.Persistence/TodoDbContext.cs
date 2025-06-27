@@ -5,5 +5,5 @@ namespace Todo.Persistence;
 
 public class TodoDbContext(DbContextOptions<TodoDbContext> options) : DbContext(options)
 {
-    public DbSet<TodoItem> Todos { get; set; }
+    public DbSet<TodoItem> TodoItems { get; set; }
 }
